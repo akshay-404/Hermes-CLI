@@ -1,0 +1,3 @@
+SQLAlchemy
+argon2-cffi
+prompt-toolkit
