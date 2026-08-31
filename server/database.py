@@ -7,10 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DATABASE_PATH = BASE_DIR / "database" / "users.db"
 DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 
-engine = create_engine(
-    DATABASE_URL,
-    echo=False
-)
+engine = create_engine(DATABASE_URL, echo=False)
 
 SessionLocal = sessionmaker(
     bind=engine,

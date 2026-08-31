@@ -28,7 +28,6 @@ class ChatUI:
             prompt=lambda: f"{self.username} > " if self.username else "> ",
             multiline=False,
         )
-        
 
         self.main_container = HSplit([
             Frame(self.chat_area, title="Hermes CLI"),
@@ -78,7 +77,7 @@ class ChatUI:
     def set_input_callback(self, callback):
         self.input_callback = callback
 
-    def print_system(self, message="\n"):
+    def print_system(self, message=""):
         current_text = self.chat_area.text
         new_text = (current_text + message + "\n")
         self.chat_area.buffer.set_document(
@@ -86,6 +85,7 @@ class ChatUI:
             bypass_readonly=True,
         )
         self.chat_area.buffer.cursor_position = len(new_text)
+        self.application.invalidate()
 
     def print_info(self, message):
         self.info_area.buffer.set_document(
@@ -209,8 +209,9 @@ class ChatUI:
                 password_field,
                 invite_field,
             ]),
-            buttons=[Button(text="Register", handler=register,),
-                     Button(text="Cancel", handler=cancel,),
+            buttons=[
+                Button(text="Register", handler=register,),
+                Button(text="Cancel", handler=cancel,),
                      ],
             width=40,
         )

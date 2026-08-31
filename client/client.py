@@ -1,6 +1,5 @@
 import socket
 import threading
-import getpass
 import sys
 import ssl
 from client.art import ASCII_color, ASCII_plain
@@ -9,27 +8,23 @@ from client.ui import ChatUI
 from datetime import datetime
 from common.protocol import encode_packet, receive_packet
 
+print(ASCII_color)
 
-SERVER_HOST = "127.0.0.1"
-SERVER_PORT = 5000 
-
-# SERVER = input("Enter server address [<address> <port>] : ")
-# try:
-#     SERVER_HOST, SERVER_PORT = SERVER.split(' ')
-# except:
-#     print("Incorrect syntax or server does not exist !!!")
-#     sys.exit()
+SERVER = input("Enter server address [<address> <port>] : ")
+try:
+    SERVER_HOST, SERVER_PORT = SERVER.split(' ')
+except:
+    print("Incorrect syntax or server does not exist !!!")
+    sys.exit()
 
 ui = ChatUI()
 
 authenticated = False
 username = None
 
-
 def receive_messages(sock):
     global authenticated
     global username
-
 
     try:
         while True:
@@ -43,7 +38,7 @@ def receive_messages(sock):
                 timestamp = payload.get("timestamp")
                 isself = sender == username
                 ui.print_message(sender, message, timestamp, isself)
-            
+
             elif packet_type == "login_success":
                 authenticated = True
                 username = payload.get("username")
@@ -57,17 +52,19 @@ def receive_messages(sock):
 
             elif packet_type == "register_success":
                 ui.print_info("[+] Registration successful.")
-                ui.print_system("Use /login to enter the chat.")
+                ui.print_system("Use /login to enter the chat." + "\n")
 
             elif packet_type == "register_fail":
                 username = payload.get("username")
-                ui.print_info(f"[!] Registration failed: {payload.get('message')}")
+                ui.print_info(
+                    f"[!] Registration failed: {payload.get('message')}")
 
             elif packet_type == "logout_success":
                 authenticated = False
                 username = None
-                ui.set_username(username)                
+                ui.set_username(username)
                 ui.print_info("[-] Logged out.")
+                ui.print_system("\n")
 
             elif packet_type == "online":
                 users = payload.get("users", [])
@@ -95,7 +92,7 @@ def handle_input(sock, instr, data):
         command = data
         if not command:
             return
-        
+
         if command.startswith("/") and not command.startswith("//"):
             if command == "/online":
                 if not authenticated:
@@ -116,7 +113,8 @@ def handle_input(sock, instr, data):
                 sys.exit()
 
             elif command == "/help":
-                ui.print_info("[!] Available commands: /register /login /logout /online /quit")
+                ui.print_info(
+                    "[!] Available commands: /register /login /logout /online /quit")
 
             elif command == "/login":
                 if authenticated:
@@ -129,7 +127,7 @@ def handle_input(sock, instr, data):
                     ui.print_info("[!] Logout before registering.")
                     return
                 ui.show_register()
-                
+
             else:
                 ui.print_info("[!] Unknown command. Use /help")
 
@@ -139,9 +137,9 @@ def handle_input(sock, instr, data):
                 return
             message = command[1:] if command.startswith("//") else command
             send_command(sock, "message",
-                        {"message": message}
-                        )
-            
+                         {"message": message}
+                         )
+
     elif instr == "login":
         if authenticated:
             ui.print_info("[!] You are already logged in.")
@@ -154,8 +152,8 @@ def handle_input(sock, instr, data):
             return
         send_command(sock, "register", data)
 
+
 def start_client():
-    print(ASCII_color)
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     context = create_client_context()
@@ -164,8 +162,9 @@ def start_client():
     try:
         tls_socket.connect((SERVER_HOST, int(SERVER_PORT)))
         ui.print_system(ASCII_plain)
-        ui.print_system(f"[+] Connected to chat server at {SERVER_HOST}:{SERVER_PORT}")
-        ui.print_system("[+] Type /help to display available commands.")
+        ui.print_system(
+            f"[+] Connected to chat server at {SERVER_HOST}:{SERVER_PORT}")
+        ui.print_system("[+] Type /help to display available commands." + "\n")
 
         receiver_thread = threading.Thread(
             target=receive_messages, args=(tls_socket,), daemon=True)
@@ -177,10 +176,12 @@ def start_client():
         ui.run()
 
     except TimeoutError:
-        print(f"[!] Could not connect to server. Is the server running on  {SERVER_HOST}?")
+        print(
+            f"[!] Could not connect to server. Is the server running on  {SERVER_HOST}?")
 
     except ConnectionRefusedError:
-        print(f"[!] Could not connect to server. Is the server running on port {SERVER_PORT}?")
+        print(
+            f"[!] Could not connect to server. Is the server running on port {SERVER_PORT}?")
 
     except ssl.SSLError as e:
         print(f"[!] TLS error: {e}")
