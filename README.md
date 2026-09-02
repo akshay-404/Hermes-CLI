@@ -128,7 +128,7 @@ Edit the `server/certs/cert.conf` to setup multiple SANs. Use `hermes.local` if 
 
 ```bash
 sudo chmod +x tls-cert-gen.sh
-./tls-cert.gen.sh
+./tls-cert-gen.sh
 ```
 
 Start the server:
