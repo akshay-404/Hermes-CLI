@@ -19,11 +19,13 @@ def localip():
         except OSError:
             return "127.0.0.1"
 
+
 HOST = "0.0.0.0"
 PORT = 5000
 
 socket_manager = SocketManager()
 invite_manager = InviteManager(interval=60)
+
 
 def send_packet(client_socket: socket.socket, packet_type: str, payload: dict | None = None):
     client_socket.sendall(encode_packet(packet_type, payload))
@@ -96,6 +98,8 @@ def handle_client(client_socket: socket.socket, address):
                 username = payload.get("username").strip()
                 password = payload.get("password")
                 invite = payload.get("invite")
+                ed25519_public_key = payload.get("ed25519_public_key")
+                x25519_public_key = payload.get("x25519_public_key")
                 if not invite_manager.validate_code(invite):
                     send_packet(
                         client_socket,
@@ -104,7 +108,8 @@ def handle_client(client_socket: socket.socket, address):
                     )
                     continue
                 try:
-                    user = register_user(username, password)
+                    user = register_user(
+                        username, password, ed25519_public_key, x25519_public_key)
                     send_packet(
                         client_socket,
                         "register_success",
@@ -129,7 +134,8 @@ def handle_client(client_socket: socket.socket, address):
                 socket_manager.broadcast(
                     encode_packet(
                         "message",
-                        {"username": username, "message": message, "timestamp": datetime.now().strftime("%H:%M:%S")}
+                        {"username": username, "message": message,
+                            "timestamp": datetime.now().strftime("%H:%M:%S")}
                     )
                 )
 
@@ -176,7 +182,7 @@ def start_server():
     server_socket.bind((HOST, PORT))
     server_socket.listen()
     tls_context = create_server_context()
-    
+
     print(f"[*] Chat server listening on {localip()}:{PORT}")
 
     invite_manager.start()
@@ -186,7 +192,8 @@ def start_server():
         print(f"[+] TCP connection from {address}")
 
         try:
-            tls_socket = tls_context.wrap_socket(client_socket, server_side=True)
+            tls_socket = tls_context.wrap_socket(
+                client_socket, server_side=True)
             print(f"[+] TLS connection established with {address}")
 
         except ssl.SSLError as e:

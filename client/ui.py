@@ -4,6 +4,9 @@ from prompt_toolkit.layout import Layout, HSplit
 from prompt_toolkit.layout.containers import FloatContainer, Float
 from prompt_toolkit.widgets import TextArea, Frame, Button, Dialog
 from prompt_toolkit.key_binding import KeyBindings
+from client.identity import load_or_create_identity
+from common.crypto import public_key_to_base64, base64_to_public_key
+identity = load_or_create_identity()
 
 class ChatUI:
 
@@ -195,6 +198,12 @@ class ChatUI:
                         "username": username,
                         "password": password,
                         "invite": invite_code,
+                        "ed25519_public_key": public_key_to_base64(
+                            identity.signing_public
+                        ),
+                        "x25519_public_key": public_key_to_base64(
+                            identity.exchange_public
+                        )
                     },
                 )
             self.close_dialog()
@@ -202,7 +211,7 @@ class ChatUI:
         def cancel():
             self.close_dialog()
 
-        dialog = Dialog(
+        dialog=Dialog(
             title="Register",
             body=HSplit([
                 username_field,
@@ -218,7 +227,7 @@ class ChatUI:
         self.show_dialog(dialog, username_field,)
 
     def show_dialog(self, dialog, focus_element,):
-        self.current_dialog = dialog
+        self.current_dialog=dialog
         self.floats.append(
             Float(
                 content=dialog,
@@ -229,7 +238,7 @@ class ChatUI:
 
     def close_dialog(self):
         self.floats.clear()
-        self.current_dialog = None
+        self.current_dialog=None
         self.application.invalidate()
         self.application.layout.focus(self.input_field)
 

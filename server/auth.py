@@ -6,14 +6,19 @@ from server.database import SessionLocal
 
 password_hasher = PasswordHasher()
 
-def register_user(username: str, password: str) -> User:
+
+def register_user(username: str, password: str, ed25519_public_key, x25519_public_key) -> User:
     with SessionLocal() as db:
         statement = select(User).where(User.username == username)
         existing_user = db.scalar(statement)
         if existing_user is not None:
             raise ValueError("Username already exists.")
         password_hash = password_hasher.hash(password)
-        user = User(username=username, password_hash=password_hash)
+        user = User(username=username,
+                    password_hash=password_hash,
+                    ed25519_public_key=ed25519_public_key,
+                    x25519_public_key=x25519_public_key
+                    )
         db.add(user)
         db.commit()
         db.refresh(user)
