@@ -1,129 +1,111 @@
-# Hermes CLI
+<p align="center">
+<img src="assets/hermes-logo.png" alt="Hermes CLI Logo" width="622">
+</p>
+<p><h3 align="center">A terminal-based chat application written in Python</h3></p>
 
-Hermes CLI is a terminal-based chat application written in Python. It follows a client-server architecture and provides real-time communication through TCP sockets, with authentication, database management, and TLS-secured communication.
+**_Hermes-CLI_** is a terminal-based chat application built using Python. It follows a client-server architecture and provides real-time communication through TCP sockets, with authentication, registration, database management, TLS-secured communication and customized terminal UI.
 
-## Features
 
-- Terminal-based chat interface
+# Features
+
+- Customized terminal-based UI
 - Client-server architecture using TCP sockets
 - User registration and authentication
 - Invite-code based registration
 - Real-time messaging
-- Online-user status
+- Online-user status enquiry
 - SQLite database with SQLAlchemy ORM
 - TLS-secured client-server communication
 - Structured JSON-based communication protocol
 - Modular and extensible project architecture
 
-## Project Structure
+# Project Structure
 
 ```text
-Hermes/
-├── client/
-│   ├── ...
-│   └── ...
-├── server/
-│   ├── ...
-│   └── ...
-├── common/
-│   ├── protocol.py
+Hermes-CLI/
+├── assets
+│   └── hermes-logo.png
+├── client
+│   ├── art.py
+│   ├── client.py
+│   ├── identity.py
+│   ├── tls.py
+│   └── ui.py
+├── common
+│   ├── __init.py__
 │   ├── models.py
-│   └── ...
-├── tests/
-│   └── ...
+│   ├── protocol.py
+├── database
+│   ├── models.py
+│   └── users.db
+├── server
+│   ├── auth.py
+│   ├── certs
+│   │   └── cert.conf.example
+│   ├── database.py
+│   ├── invite.py
+│   ├── server.py
+│   ├── socket_manager.py
+│   └── tls.py
 ├── requirements.txt
+├── tls-cert-gen.sh
 └── README.md
 ```
 
 The exact structure may change as the project develops.
 
-## Architecture
+# Architecture
 
 Hermes uses a client-server architecture in which clients establish connections to a central server.
 
 ```text
-+-------------+           TCP/TLS           +-------------+
-|    Client   | <-------------------------> |    Server   |
-+-------------+                             +-------------+
-                                                  |
-                                                  v
-                                            SQLite Database
++-------------+         TCP/TLS         +-------------+         TCP/TLS         +-------------+
+|    Client   | <---------------------> |    Server   | <---------------------> |    Client   | 
++-------------+                         +-------------+                         +-------------+
+                                               |
+                                               v
+                                         +------------+
+                                         |  Database  |
+                                         +------------+
 ```
 
 The client is responsible for the terminal interface and communication with the server. The server handles client connections, authentication, message routing, user management, and database operations.
 
-## Network Communication
+# Network Communication
 
-Hermes uses TCP sockets for reliable communication between clients and the server.
+Hermes uses TCP sockets for reliable communication between clients and the server. TLS is used to secure the connection between the client and server, providing confidentiality and integrity for data transmitted over the network. The application uses a structured packet-based protocol built on top of the socket connection.
 
-TLS is used to secure the connection between the client and server, providing confidentiality and integrity for data transmitted over the network.
+# Network Protocol
 
-The application uses a structured packet-based protocol built on top of the socket connection.
-
-## Network Protocol
-
-Hermes uses JSON packets for communication between clients and the server.
-
-Packets contain a packet type and an associated payload.
-
-Examples of packet types include:
+Hermes uses JSON packets for communication between clients and the server. Packets contain a packet type and an associated payload. Examples of packet types include:
 
 ```text
-login
-login_success
-register
-register_success
-logout
-logout_success
-message
-online
+login, login_success, register, register_success, logout, logout_success, message, online
 ```
 
 The protocol uses a fixed-size message header to indicate the size of the JSON payload that follows. This allows the receiver to determine where a complete packet ends, even when TCP delivers the data in multiple segments.
 
-## Authentication
+# Authentication
 
-Users register and authenticate with the Hermes server using their account credentials.
+Users register and authenticate with the Hermes server using their account credentials. Registration can also require a valid invite code, allowing access to the system to be controlled by the server.
 
-Registration can also require a valid invite code, allowing access to the system to be controlled by the server.
+# Database
 
-## Database
+Hermes currently uses SQLite with SQLAlchemy ORM. The database is used to manage application data such as user accounts, authentication information, user public information and application state. SQLAlchemy provides an abstraction layer between the application and the underlying SQLite database.
 
-Hermes currently uses SQLite with SQLAlchemy ORM.
+# Secure Communication (TLS)
 
-The database is used to manage application data such as:
+Hermes uses TLS to secure communication between clients and the server. The TLS configuration uses certificates to establish the server's identity and protect network traffic from being read or modified by third parties during transmission. For development and LAN deployments, the server certificate can be configured with the appropriate hostnames or IP addresses used by clients.
 
-- User accounts
-- Authentication information
-- User public information
-- Application state
+# Deployment/Testing Hermes
 
-SQLAlchemy provides an abstraction layer between the application and the underlying SQLite database.
-
-## TLS
-
-Hermes uses TLS to secure communication between clients and the server.
-
-The TLS configuration uses certificates to establish the server's identity and protect network traffic from being read or modified by third parties during transmission.
-
-For development and LAN deployments, the server certificate can be configured with the appropriate hostnames or IP addresses used by clients.
-
-## Requirements
-
+Requirements include:
 - Python 3.10 or newer
 - SQLite
 - A terminal capable of running the application
 - OpenSSL/TLS certificate support
+- Python dependencies listed in `requirements.txt`.
 
-Python dependencies are listed in `requirements.txt`.
-
-Install the dependencies with:
-
-```bash
-pip install -r requirements.txt
-```
-
-## Running Hermes
 
 Clone the repository:
 
@@ -132,19 +114,29 @@ git clone https://github.com/akshay-404/Hermes-CLI.git
 cd Hermes-CLI
 ```
 
-Install the dependencies:
+Setup virtualenv and install the dependencies:
 
 ```bash
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Initialize the database using the project's database initialization procedure.
+TLS Certificate Setup:
+
+Edit the `server/certs/cert.conf` to setup multiple SANs. Use `hermes.local` if using _mDNS_ or _Avahi_.
+
+```bash
+sudo chmod +x tls-cert-gen.sh
+./tls-cert.gen.sh
+```
 
 Start the server:
 
 ```bash
 python -m server.server
 ```
+This starts the server and initialize the SQLite database.
 
 Start a client in another terminal:
 
@@ -152,21 +144,9 @@ Start a client in another terminal:
 python -m client.client
 ```
 
-The exact entry-point paths may change as development continues.
+Use localhost or hostname based on deployment mode. Use port 5000. The exact entry-point paths may change as development continues.
 
-## Configuration
-
-Configuration such as the following should preferably be kept outside the source code:
-
-- Server host and port
-- Database location
-- TLS certificate path
-- TLS private key path
-- Invite-code settings
-
-Sensitive configuration files should not be committed to version control.
-
-## Development
+# Development
 
 Hermes is currently under active development. The project is being developed incrementally, with networking, authentication, database management, TLS, and the terminal interface implemented as separate components.
 
@@ -183,12 +163,6 @@ Planned improvements include:
 - Further improvements to the terminal interface
 
 
-## Security
-
-Hermes is currently a development and learning project. Although TLS is used to protect client-server communication, the overall application has not undergone an independent security audit.
-
-Users should avoid relying on the current development version for highly sensitive communications.
-
-## License
+# License
 
 This project is currently unlicensed. A license will be added in a future release.
